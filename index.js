@@ -1,27 +1,35 @@
-import KNOWN_FONTS from "./fonts.js";
+import FontService from "./FontService.js";
 
-// CREATE DATALIST OPTIONS AND FONTS ARRAY
-const datalist = document.querySelector(".my-datalist");
-const fontsArray = [];
-KNOWN_FONTS.map((font) => {
-  const option = document.createElement("option");
-  option.value = font.family;
-  datalist.appendChild(option);
-  fontsArray.push([font.family, font.category]);
-});
-
-// HANDLE SELECT CHANGE
 const input = document.querySelector("input");
 const changingText = document.querySelector(".changing-text");
-const style = document.querySelector("style");
-input.addEventListener("input", (event) => {
-  fontsArray.map((fontArray) => {
-    if (fontArray[0] === event.target.value) {
-      changingText.style.fontFamily = fontArray;
+
+function insertDataListFor(googleFonts) {
+  const datalist = document.querySelector(".datalist");
+  googleFonts.forEach((font) => {
+    const option = document.createElement("option");
+    option.value = font.family;
+    datalist.appendChild(option);
+  });
+}
+
+function addEventListenerToInput(googleFonts, fontService) {
+  input.addEventListener("input", (event) => {
+    const selectedFont = googleFonts.find(
+      (fontObject) => fontObject.family === event.target.value
+    );
+    if (selectedFont) {
+      fontService.insertFontToHead(selectedFont);
+      changingText.style.fontFamily = `${selectedFont.family}, ${selectedFont.category}`;
       event.target.value = "";
-      const importRule = `@import url("https://fonts.googleapis.com/css2?family=${fontArray[0]}&family=Arial&display=swap")`;
-      if (!style.innerText.includes(importRule)) 
-      style.appendChild(document.createTextNode(importRule));
     }
   });
-});
+}
+
+const fontService = new FontService();
+async function initFontPicker(fontService) {
+  const googleFonts = await fontService.getGoogleFonts();
+  insertDataListFor(googleFonts);
+  addEventListenerToInput(googleFonts, fontService);
+}
+
+initFontPicker(fontService);
